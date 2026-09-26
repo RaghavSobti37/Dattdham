@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://dattdham.in/sitemap.xml
