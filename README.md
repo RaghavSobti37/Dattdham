@@ -1,6 +1,6 @@
-# Shri Kshetra Dattdham
+# Shri Kshetra Dattadham
 
-Official static website for Shri Kshetra Dattdham, Govardhan, Nashik.
+Official static website for Shri Kshetra Dattadham, Govardhan, Nashik.
 
-Deploy this repository's root on Vercel and attach `dattdham.in` and `www.dattdham.in`.
-Official website for Shri Kshetra Dattdham, Govardhan, Nashik
+Deploy this repository's root on Vercel and attach `www.dattadham.in` and `www.www.dattadham.in`.
+Official website for Shri Kshetra Dattadham, Govardhan, Nashik
