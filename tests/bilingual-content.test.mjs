@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
 assert.match(html, /data-language-toggle/, 'language control is required');
+assert.match(html, /assets\/dattadham-seal\.jpg/, 'header must use the cropped Dattadham institutional seal');
 const translated = [...html.matchAll(/data-i18n="[^"]+"/g)];
 assert.ok(translated.length >= 35, 'core content requires authored bilingual nodes');
 for (const node of translated) {
