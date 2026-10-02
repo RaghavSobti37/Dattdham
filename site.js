@@ -21,6 +21,20 @@ function applyLanguage(language) {
 applyLanguage(localStorage.getItem('dattadham-language') || 'en');
 languageToggle.addEventListener('click', () => applyLanguage(document.documentElement.lang === 'en' ? 'hi' : 'en'));
 
+const mediaTabs = [...document.querySelectorAll('[data-media-filter]')];
+const mediaCards = [...document.querySelectorAll('[data-media-source]')];
+mediaTabs.forEach((tab) => tab.addEventListener('click', () => {
+  const source = tab.dataset.mediaFilter;
+  mediaTabs.forEach((candidate) => {
+    const selected = candidate === tab;
+    candidate.classList.toggle('is-active', selected);
+    candidate.setAttribute('aria-selected', String(selected));
+  });
+  mediaCards.forEach((card) => {
+    card.hidden = card.dataset.mediaSource !== source;
+  });
+}));
+
 document.querySelectorAll('[data-lead-form]').forEach((form) => form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const status = form.querySelector('.form-status');
