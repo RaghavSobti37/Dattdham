@@ -7,6 +7,9 @@ assert.match(html, /data-language-toggle/, 'language control is required');
 assert.match(html, /assets\/dattadham-seal\.jpg/, 'header must use the cropped Dattadham institutional seal');
 assert.equal((html.match(/data-media-source="youtube"/g) || []).length, 12, 'twelve popular YouTube videos are required');
 assert.equal((html.match(/data-media-source="instagram"/g) || []).length, 12, 'twelve official Instagram reels are required');
+assert.match(html, /id="visit"/, 'the end-of-page visit invitation is required');
+assert.match(html, /https:\/\/www\.google\.com\/maps\/search\/\?api=1/, 'the visit invitation must link to Google Maps');
+assert.match(html, /data-i18n="visit-title"/, 'the visit invitation needs authored bilingual copy');
 const translated = [...html.matchAll(/data-i18n="[^"]+"/g)];
 assert.ok(translated.length >= 35, 'core content requires authored bilingual nodes');
 for (const node of translated) {
