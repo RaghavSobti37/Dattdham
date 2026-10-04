@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
+assert.match(html, /rel="icon"[^>]*href="\/assets\/favicon\.png"/, 'the supplied Dattadham logo mark must be used as the favicon');
+assert.ok(existsSync(new URL('../assets/favicon.png', import.meta.url)), 'the favicon image must be present');
 assert.match(html, /data-language-toggle/, 'language control is required');
 assert.match(html, /assets\/dattadham-seal\.jpg/, 'header must use the cropped Dattadham institutional seal');
 assert.equal((html.match(/data-media-source="youtube"/g) || []).length, 12, 'twelve popular YouTube videos are required');
