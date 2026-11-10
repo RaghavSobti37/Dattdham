@@ -44,3 +44,4 @@ section{padding:132px 0}.origin{display:grid;grid-template-columns:.9fr 1.1fr;ga
 .footer-links{font-size:14px}.visit-mantra{font-size:14px}.visit-map{font-size:14px}
 @media(max-width:900px){.nav-brand small{font-size:11px}.nav-cta{font-size:13px}}
 @media(max-width:520px){.visit-map{font-size:13px}}
+.media-feature-actions{display:flex;flex-wrap:wrap;gap:12px}.media-feature-alt{display:inline-flex;padding:14px 20px;border:1px solid var(--rule-light);color:var(--cream-bright);font:600 15px/1 var(--sans);transition:border-color .2s,color .2s}.media-feature-alt:hover{border-color:var(--brass);color:var(--brass)}
