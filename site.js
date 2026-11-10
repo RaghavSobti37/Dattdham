@@ -9,6 +9,7 @@ function applyLanguage(language) {
 
   const isHindi = language === 'hi';
   languageToggle.textContent = isHindi ? 'English' : 'हिंदी';
+  languageToggle.lang = isHindi ? 'en' : 'hi';
   languageToggle.setAttribute('aria-pressed', String(isHindi));
   languageToggle.setAttribute('aria-label', isHindi ? 'Switch to English' : 'हिंदी में देखें');
   document.title = isHindi ? 'श्री क्षेत्र दत्ताधाम | गौगंगा संकल्प' : 'Shri Kshetra Dattadham | GauGanga Sankalp';
@@ -20,6 +21,21 @@ function applyLanguage(language) {
 
 applyLanguage(localStorage.getItem('dattadham-language') || 'en');
 languageToggle.addEventListener('click', () => applyLanguage(document.documentElement.lang === 'en' ? 'hi' : 'en'));
+
+const siteHeader = document.querySelector('.site-header');
+const navToggle = document.querySelector('[data-nav-toggle]');
+function setNav(open) {
+  siteHeader.classList.toggle('nav-open', open);
+  navToggle.setAttribute('aria-expanded', String(open));
+}
+navToggle.addEventListener('click', () => setNav(navToggle.getAttribute('aria-expanded') !== 'true'));
+document.querySelectorAll('#site-nav a').forEach((link) => link.addEventListener('click', () => setNav(false)));
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && siteHeader.classList.contains('nav-open')) {
+    setNav(false);
+    navToggle.focus();
+  }
+});
 
 const mediaDialog = document.querySelector('[data-media-dialog]');
 const mediaFrame = mediaDialog.querySelector('[data-media-frame]');
@@ -33,7 +49,12 @@ document.querySelectorAll('[data-embed]').forEach((link) => link.addEventListene
   const { embed, id } = link.dataset;
   const iframe = document.createElement('iframe');
   iframe.src = embedUrl[embed](id);
-  iframe.title = link.querySelector('img')?.alt || 'Video';
+  const title = link.querySelector('h3, h4')?.textContent.trim() || 'Video';
+  iframe.title = title;
+  mediaDialog.setAttribute('aria-label', title);
+  const isHindi = document.documentElement.lang === 'hi';
+  const sourceName = embed === 'youtube' ? (isHindi ? 'यूट्यूब' : 'YouTube') : (isHindi ? 'इंस्टाग्राम' : 'Instagram');
+  mediaDialog.querySelector('[data-media-open]').textContent = isHindi ? `${sourceName} पर खोलें` : `Open on ${sourceName}`;
   iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
   iframe.referrerPolicy = 'strict-origin-when-cross-origin';
   mediaDialog.dataset.kind = embed;
