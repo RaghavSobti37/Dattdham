@@ -35,6 +35,30 @@ mediaTabs.forEach((tab) => tab.addEventListener('click', () => {
   });
 }));
 
+const mediaDialog = document.querySelector('[data-media-dialog]');
+const mediaFrame = mediaDialog.querySelector('[data-media-frame]');
+const embedUrl = {
+  youtube: (id) => `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`,
+  instagram: (id) => `https://www.instagram.com/reel/${id}/embed/`,
+};
+document.querySelectorAll('[data-embed]').forEach((link) => link.addEventListener('click', (event) => {
+  if (event.metaKey || event.ctrlKey || event.shiftKey || !mediaDialog.showModal) return;
+  event.preventDefault();
+  const { embed, id } = link.dataset;
+  const iframe = document.createElement('iframe');
+  iframe.src = embedUrl[embed](id);
+  iframe.title = link.querySelector('img')?.alt || 'Video';
+  iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+  iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+  mediaDialog.dataset.kind = embed;
+  mediaFrame.replaceChildren(iframe);
+  mediaDialog.querySelector('[data-media-open]').href = link.href;
+  mediaDialog.showModal();
+}));
+mediaDialog.querySelector('[data-media-close]').addEventListener('click', () => mediaDialog.close());
+mediaDialog.addEventListener('click', (event) => { if (event.target === mediaDialog) mediaDialog.close(); });
+mediaDialog.addEventListener('close', () => mediaFrame.replaceChildren());
+
 document.querySelectorAll('[data-lead-form]').forEach((form) => form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const status = form.querySelector('.form-status');
