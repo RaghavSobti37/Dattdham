@@ -67,7 +67,7 @@ mediaDialog.addEventListener('click', (event) => { if (event.target === mediaDia
 mediaDialog.addEventListener('close', () => mediaFrame.replaceChildren());
 
 // Google Apps Script web app that saves leads to the Dattadham sheet (google-apps-script/Code.gs).
-const LEADS_ENDPOINT = '';
+const LEADS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyplFa8tTPNO6j0YUq2_27aOS5qha_10_tjZZv4UovezVRvsqF0y_jQomiwbzA8MfzDiQ/exec';
 
 document.querySelectorAll('[data-lead-form]').forEach((form) => form.addEventListener('submit', async (event) => {
   event.preventDefault();
