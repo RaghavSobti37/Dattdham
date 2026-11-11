@@ -72,21 +72,36 @@ document.querySelectorAll('[data-lead-form]').forEach((form) => form.addEventLis
   const button = form.querySelector('button');
   const language = document.documentElement.lang;
   const copy = language === 'hi'
-    ? { sending: 'भेजा जा रहा है…', success: 'धन्यवाद। हम शीघ्र आपसे संपर्क करेंगे।', error: 'विवरण नहीं भेजे जा सके। कृपया हमें ईमेल करें।' }
-    : { sending: 'Sending…', success: 'Thank you. We will be in touch soon.', error: 'We could not send your details. Please email us directly.' };
+    ? {
+      sending: 'भेजा जा रहा है…',
+      success: 'धन्यवाद। आपका विवरण सफलतापूर्वक प्राप्त हुआ है। हम शीघ्र आपसे संपर्क करेंगे।',
+      emailPending: 'धन्यवाद। आपका विवरण प्राप्त हुआ है। ईमेल की पुष्टि फिलहाल नहीं भेजी जा सकी।',
+      error: 'आपका विवरण अभी सुरक्षित नहीं हो सका। कृपया कुछ देर बाद पुनः प्रयास करें।',
+    }
+    : {
+      sending: 'Sending…',
+      success: 'Thank you. Your details have been received. We will be in touch soon.',
+      emailPending: 'Thank you. Your details have been received. We could not send the email confirmation just now.',
+      error: 'We could not save your details. Please try again in a little while.',
+    };
   const payload = Object.fromEntries(new FormData(form));
   payload.source = form.dataset.source;
   status.textContent = copy.sending;
   button.disabled = true;
+
   try {
     const response = await fetch('/api/leads', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    if (!response.ok) throw new Error('Submission failed');
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.saved) {
+      throw new Error(result.error || 'Submission failed');
+    }
+
     form.reset();
-    status.textContent = copy.success;
+    status.textContent = result.emailSent ? copy.success : copy.emailPending;
   } catch {
     status.textContent = copy.error;
   } finally {
