@@ -8,9 +8,11 @@ Deploy the repository root on Vercel and attach the intended Dattadham domain.
 
 ## Participation form
 
-The participation form submits to `/api/leads`. Successful submissions are appended to the existing Google spreadsheet, in the existing `Leads` tab, using columns A:H in this order:
+Both forms (the main site and `/gauganga`) post to a Google Apps Script web app, set as `LEADS_ENDPOINT` in `site.js` and `gauganga/site.js`. The script source is in `google-apps-script/Code.gs`; it is deployed from the spreadsheet's Extensions → Apps Script as a web app (Execute as: Me, Who has access: Anyone).
 
-1. Timestamp
+Each submission is appended to the `Leads` tab of the [form responses spreadsheet](https://docs.google.com/spreadsheets/d/10fRBc95EQOVkexpT9HdqX_q7HPO-k8i-IKBw4J2e-G0/edit), columns A:H:
+
+1. Timestamp (India time)
 2. Source
 3. Name
 4. Email
@@ -19,23 +21,8 @@ The participation form submits to `/api/leads`. Successful submissions are appen
 7. Participation
 8. Message
 
-The API responds with `saved: true` after the spreadsheet append succeeds. It then attempts to send a confirmation email to the submitted email address. The website shows a thank-you message even if email delivery is temporarily unavailable, and clearly indicates when the email confirmation could not be sent.
+Values are stored as plain text, so phone numbers keep `+` and leading zeros. After saving, the script sends a confirmation email to the visitor from the script owner's Gmail, with `Dattadham1008@gmail.com` as reply-to. The site shows a thank-you message once the row is saved, and says so if the email could not be sent.
 
-## Vercel environment variables
+To change the script, edit it in Apps Script, then use Deploy → Manage deployments → Edit → New version so the URL stays the same, and copy the change back into `google-apps-script/Code.gs`.
 
-Configure these under the Vercel project's Settings → Environment Variables, then redeploy:
-
-### Google Sheets (required)
-
-- `GOOGLE_SERVICE_ACCOUNT_EMAIL`
-- `GOOGLE_PRIVATE_KEY` — the service account private key; preserve newlines or use escaped `\\n`
-- `GOOGLE_SHEET_ID`
-
-The Google service account must have Editor access to the existing spreadsheet. The API writes only to `Leads!A:H`.
-
-### Confirmation email (required for live email delivery)
-
-- `RESEND_API_KEY` — API key from the Resend account
-- `MAIL_FROM` — a sender identity verified in Resend, for example `Shri Kshetra Dattadham <no-reply@dattadham.in>`
-
-The sender domain must be verified in Resend before sending to arbitrary visitors. The API uses `Dattadham1008@gmail.com` as the reply-to address. No separate mailbox is required for the no-reply sender, but DNS access is required to verify the domain.
+`api/leads.js` is an earlier Vercel function that writes through a service account. It is only used if `LEADS_ENDPOINT` is empty.

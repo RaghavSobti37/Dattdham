@@ -66,6 +66,9 @@ mediaDialog.querySelector('[data-media-close]').addEventListener('click', () => 
 mediaDialog.addEventListener('click', (event) => { if (event.target === mediaDialog) mediaDialog.close(); });
 mediaDialog.addEventListener('close', () => mediaFrame.replaceChildren());
 
+// Google Apps Script web app that saves leads to the Dattadham sheet (google-apps-script/Code.gs).
+const LEADS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyplFa8tTPNO6j0YUq2_27aOS5qha_10_tjZZv4UovezVRvsqF0y_jQomiwbzA8MfzDiQ/exec';
+
 document.querySelectorAll('[data-lead-form]').forEach((form) => form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const status = form.querySelector('.form-status');
@@ -90,9 +93,10 @@ document.querySelectorAll('[data-lead-form]').forEach((form) => form.addEventLis
   button.disabled = true;
 
   try {
-    const response = await fetch('/api/leads', {
+    // text/plain avoids a CORS preflight, which Google Apps Script does not answer.
+    const response = await fetch(LEADS_ENDPOINT || '/api/leads', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': LEADS_ENDPOINT ? 'text/plain;charset=utf-8' : 'application/json' },
       body: JSON.stringify(payload),
     });
     const result = await response.json().catch(() => ({}));
