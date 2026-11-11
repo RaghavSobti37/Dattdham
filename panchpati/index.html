@@ -13,12 +13,32 @@
     *{box-sizing:border-box}
     html,body{overflow-x:clip}
     body{margin:0;background:var(--linen);color:var(--ink);font:400 16px/1.5 var(--sans)}
-    .bar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;padding:10px max(16px,calc((100% - 1000px)/2));background:var(--white);border-bottom:1px solid var(--line)}
+    .bar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;min-height:60px;padding:8px max(16px,calc((100% - 1000px)/2));background:var(--white);border-bottom:1px solid var(--line)}
     .home{display:block;flex:0 0 auto;border-radius:50%}
-    .bar img{width:44px;height:44px;border-radius:50%;flex:0 0 auto}
-    .bar h1{margin:0;min-width:0;color:var(--maroon);font:500 20px/1.15 var(--serif);overflow-wrap:break-word}
-    .bar small{display:block;color:var(--stone);font:400 13px/1.3 var(--sans)}
-    .count{margin-left:auto;color:var(--stone);font:600 14px var(--sans);white-space:nowrap}
+    .bar img{display:block;width:36px;height:36px;border-radius:50%}
+    .bar h1{margin:0;min-width:0;color:var(--maroon);font:500 18px/1.15 var(--serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .bar small{display:block;color:var(--stone);font:400 12px/1.3 var(--sans);overflow:hidden;text-overflow:ellipsis}
+    .count{margin:0 0 0 auto;color:var(--stone);font:600 13px var(--sans);white-space:nowrap}
+    .actions{display:flex;align-items:center;gap:12px;flex:0 0 auto}
+    .site-link{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;background:var(--maroon);border:1px solid var(--maroon);color:var(--white);font:600 13px/1 var(--sans);text-decoration:none;white-space:nowrap;transition:background .2s,color .2s}
+    .site-link:hover{background:transparent;color:var(--maroon)}
+    .lang{min-height:40px;padding:0 4px 0 12px;border:0;border-left:1px solid var(--line);background:transparent;color:var(--maroon);font:600 14px/1 var(--sans);cursor:pointer;white-space:nowrap}
+    .menu-toggle{display:none}
+    button:focus-visible{outline:3px solid var(--maroon);outline-offset:3px}
+    @media(max-width:640px){
+      .bar{gap:10px;padding-inline:16px}
+      .bar img{width:32px;height:32px}
+      .bar h1{font-size:16px}
+      .bar small{font-size:11px}
+      .count{display:none}
+      .lang{margin-left:auto;padding-left:10px}
+      .menu-toggle{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--line);background:transparent;color:var(--maroon);cursor:pointer}
+      .menu-toggle svg{width:18px;height:18px}
+      .actions{display:none;position:absolute;top:100%;left:0;right:0;padding:12px 16px 16px;background:var(--white);border-bottom:1px solid var(--line);box-shadow:0 12px 24px var(--page-shadow)}
+      .bar.menu-open .actions{display:block}
+      .actions .site-link{display:flex;justify-content:center;width:100%;min-height:46px;font-size:15px}
+    }
+    @media(max-width:360px){.bar{gap:8px;padding-inline:12px}.bar img{width:30px;height:30px}.bar h1{font-size:15px}.lang{padding:0 2px 0 8px;font-size:13px}.menu-toggle{width:36px;height:36px}}
     .pages{display:grid;gap:18px;width:min(1000px,100%);margin:0 auto;padding:18px 16px 48px}
     .page{position:relative;margin:0;background:var(--white);box-shadow:0 2px 14px var(--page-shadow)}
     .page canvas{display:block;width:100%;height:auto}
@@ -29,15 +49,78 @@
 </head>
 <body>
   <header class="bar">
-    <a class="home" href="/"><img src="/assets/dattadham-seal.jpg" alt="Shri Kshetra Dattadham home"></a>
-    <h1><span lang="hi">श्री दत्त पंचपदी</span><small>Shri Kshetra Dattadham</small></h1>
+    <a class="home" href="/"><img src="/assets/dattadham-seal.jpg" alt="Shri Kshetra Dattadham home" data-home-alt></a>
+    <h1><span data-i18n data-en="Shri Datta Panchpadi" data-hi="श्री दत्त पंचपदी">Shri Datta Panchpadi</span><small data-i18n data-en="Shri Kshetra Dattadham" data-hi="श्री क्षेत्र दत्ताधाम">Shri Kshetra Dattadham</small></h1>
     <p class="count" aria-live="polite" data-count></p>
+    <button class="lang" type="button" lang="hi" aria-pressed="false" aria-label="Switch to Hindi" data-language-toggle>हिंदी</button>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="page-actions" aria-label="Menu" data-menu-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <div class="actions" id="page-actions">
+      <a class="site-link" href="/"><span data-i18n data-en="Main website" data-hi="मुख्य वेबसाइट">Main website</span><span aria-hidden="true">→</span></a>
+    </div>
   </header>
   <main class="pages" data-pages aria-label="Document pages">
-    <p class="status" data-status>Loading the document… <noscript>This viewer needs JavaScript. <a href="/panchpati/panchpati.pdf">Open the document</a>.</noscript></p>
+    <p class="status" data-status><span data-i18n data-en="Loading the document…" data-hi="दस्तावेज़ लोड हो रहा है…">Loading the document…</span> <noscript>This viewer needs JavaScript. <a href="/panchpati/panchpati.pdf">Open the document</a>.</noscript></p>
   </main>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script>
+    const bar = document.querySelector('.bar');
+    const languageToggle = document.querySelector('[data-language-toggle]');
+    const menuToggle = document.querySelector('[data-menu-toggle]');
+    const homeImage = document.querySelector('[data-home-alt]');
+    let pageCount = 0;
+    const copy = {
+      en: {
+        title: 'Shri Datta Panchpadi | Shri Kshetra Dattadham',
+        pages: (n) => `${n} pages`,
+        page: (n, total) => `Page ${n} of ${total}`,
+        error: 'The document could not be shown here. <a href="/panchpati/panchpati.pdf">Open the document</a>.',
+        menu: 'Menu',
+        home: 'Shri Kshetra Dattadham home',
+      },
+      hi: {
+        title: 'श्री दत्त पंचपदी | श्री क्षेत्र दत्ताधाम',
+        pages: (n) => `${n} पृष्ठ`,
+        page: (n, total) => `पृष्ठ ${n} / ${total}`,
+        error: 'दस्तावेज़ यहाँ नहीं दिख सका। <a href="/panchpati/panchpati.pdf">दस्तावेज़ खोलें</a>।',
+        menu: 'मेनू',
+        home: 'श्री क्षेत्र दत्ताधाम मुखपृष्ठ',
+      },
+    };
+    const lang = () => (document.documentElement.lang === 'hi' ? 'hi' : 'en');
+
+    function applyLanguage(language) {
+      document.documentElement.lang = language;
+      document.querySelectorAll('[data-i18n]').forEach((node) => { node.textContent = node.dataset[language]; });
+      const isHindi = language === 'hi';
+      languageToggle.textContent = isHindi ? 'English' : 'हिंदी';
+      languageToggle.lang = isHindi ? 'en' : 'hi';
+      languageToggle.setAttribute('aria-pressed', String(isHindi));
+      languageToggle.setAttribute('aria-label', isHindi ? 'Switch to English' : 'हिंदी में देखें');
+      menuToggle.setAttribute('aria-label', copy[language].menu);
+      homeImage.alt = copy[language].home;
+      document.title = copy[language].title;
+      if (pageCount) document.querySelector('[data-count]').textContent = copy[language].pages(pageCount);
+      document.querySelectorAll('canvas[data-page-number]').forEach((canvas) => {
+        canvas.setAttribute('aria-label', copy[language].page(canvas.dataset.pageNumber, pageCount));
+      });
+      try { localStorage.setItem('dattadham-language', language); } catch {}
+    }
+
+    let savedLanguage = 'en';
+    try { savedLanguage = localStorage.getItem('dattadham-language') || 'en'; } catch {}
+    applyLanguage(savedLanguage);
+    languageToggle.addEventListener('click', () => applyLanguage(lang() === 'en' ? 'hi' : 'en'));
+
+    function setMenu(open) {
+      bar.classList.toggle('menu-open', open);
+      menuToggle.setAttribute('aria-expanded', String(open));
+    }
+    menuToggle.addEventListener('click', () => setMenu(menuToggle.getAttribute('aria-expanded') !== 'true'));
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && bar.classList.contains('menu-open')) { setMenu(false); menuToggle.focus(); }
+    });
+    document.addEventListener('click', (event) => { if (!bar.contains(event.target)) setMenu(false); });
+
     const PDF_URL = '/panchpati/panchpati.pdf';
     const pagesEl = document.querySelector('[data-pages]');
     const statusEl = document.querySelector('[data-status]');
@@ -46,7 +129,8 @@
 
     pdfjsLib.getDocument(PDF_URL).promise.then(async (pdf) => {
       statusEl.remove();
-      countEl.textContent = `${pdf.numPages} pages`;
+      pageCount = pdf.numPages;
+      countEl.textContent = copy[lang()].pages(pageCount);
       const first = await pdf.getPage(1);
       const base = first.getViewport({ scale: 1 });
       const rendered = new Set();
@@ -64,7 +148,8 @@
         canvas.width = Math.floor(viewport.width);
         canvas.height = Math.floor(viewport.height);
         canvas.setAttribute('role', 'img');
-        canvas.setAttribute('aria-label', `Page ${number} of ${pdf.numPages}`);
+        canvas.dataset.pageNumber = number;
+        canvas.setAttribute('aria-label', copy[lang()].page(number, pdf.numPages));
         await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
         figure.style.aspectRatio = '';
         figure.replaceChildren(canvas);
@@ -88,7 +173,7 @@
         observer.observe(figure);
       }
     }).catch(() => {
-      statusEl.innerHTML = 'The document could not be shown here. <a href="/panchpati/panchpati.pdf">Open the document</a>.';
+      statusEl.innerHTML = copy[lang()].error;
     });
   </script>
 </body>
