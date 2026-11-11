@@ -16,10 +16,18 @@ function applyLanguage(language) {
   document.querySelector('meta[name="description"]').content = isHindi
     ? 'श्री क्षेत्र दत्ताधाम — सेवा, संवर्धन और कल्याण की जीवन-धारा।'
     : 'Shri Kshetra Dattadham — a living current of service, care and renewal.';
-  localStorage.setItem('dattadham-language', language);
+  try { localStorage.setItem('dattadham-language', language); } catch {}
 }
 
-applyLanguage(localStorage.getItem('dattadham-language') || 'en');
+// A ?lang= in the link (from the Panchpati page) wins, then the saved choice.
+const requestedLanguage = new URLSearchParams(location.search).get('lang');
+let initialLanguage = 'en';
+try { initialLanguage = localStorage.getItem('dattadham-language') || 'en'; } catch {}
+if (requestedLanguage === 'hi' || requestedLanguage === 'en') {
+  initialLanguage = requestedLanguage;
+  history.replaceState(null, '', location.pathname + location.hash);
+}
+applyLanguage(initialLanguage);
 languageToggle.addEventListener('click', () => applyLanguage(document.documentElement.lang === 'en' ? 'hi' : 'en'));
 
 const siteHeader = document.querySelector('.site-header');
