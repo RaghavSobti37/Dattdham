@@ -1,5 +1,8 @@
 const { google } = require('googleapis');
 
+// Existing Dattadham response spreadsheet. Keep the environment override for deployments.
+const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID || '10fRBc95EQOVkexpT9HdqX_q7HPO-k8i-IKBw4J2e-G0';
+
 const clean = (value) => (typeof value === 'string' ? value.trim() : '');
 const escapeHtml = (value) => clean(value)
   .replace(/&/g, '&amp;')
@@ -110,7 +113,6 @@ module.exports = async (request, response) => {
   if (
     !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL
     || !process.env.GOOGLE_PRIVATE_KEY
-    || !process.env.GOOGLE_SHEET_ID
   ) {
     console.error('Lead submission failed: Google Sheets environment variables are missing');
     return response.status(503).json({ error: 'Submission service is not configured' });
@@ -124,7 +126,7 @@ module.exports = async (request, response) => {
     });
 
     await google.sheets({ version: 'v4', auth }).spreadsheets.values.append({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID,
+      spreadsheetId: SPREADSHEET_ID,
       range: 'Leads!A:H',
       valueInputOption: 'USER_ENTERED',
       requestBody: {
