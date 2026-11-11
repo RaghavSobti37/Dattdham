@@ -3,6 +3,12 @@ const { google } = require('googleapis');
 // Existing Dattadham response spreadsheet. Keep the environment override for deployments.
 const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID || '10fRBc95EQOVkexpT9HdqX_q7HPO-k8i-IKBw4J2e-G0';
 
+// Accepts the key with real newlines, escaped "\\n", or wrapped in quotes.
+const normalizePrivateKey = (value) => value
+  .trim()
+  .replace(/^["']|["']$/g, '')
+  .replace(/\\n/g, '\n');
+
 const clean = (value) => (typeof value === 'string' ? value.trim() : '');
 const escapeHtml = (value) => clean(value)
   .replace(/&/g, '&amp;')
@@ -121,14 +127,17 @@ module.exports = async (request, response) => {
   try {
     const auth = new google.auth.JWT({
       email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      key: normalizePrivateKey(process.env.GOOGLE_PRIVATE_KEY),
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
 
     await google.sheets({ version: 'v4', auth }).spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
       range: 'Leads!A:H',
-      valueInputOption: 'USER_ENTERED',
+      // RAW keeps visitor input as plain text: phone numbers keep "+" and leading
+      // zeros, and values starting with "=" are never evaluated as formulas.
+      valueInputOption: 'RAW',
+      insertDataOption: 'INSERT_ROWS',
       requestBody: {
         values: [[
           new Date().toISOString(),
