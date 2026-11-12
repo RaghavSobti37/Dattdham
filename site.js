@@ -74,9 +74,6 @@ mediaDialog.querySelector('[data-media-close]').addEventListener('click', () => 
 mediaDialog.addEventListener('click', (event) => { if (event.target === mediaDialog) mediaDialog.close(); });
 mediaDialog.addEventListener('close', () => mediaFrame.replaceChildren());
 
-// Google Apps Script web app that saves leads to the Dattadham sheet (google-apps-script/Code.gs).
-const LEADS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyplFa8tTPNO6j0YUq2_27aOS5qha_10_tjZZv4UovezVRvsqF0y_jQomiwbzA8MfzDiQ/exec';
-
 document.querySelectorAll('[data-lead-form]').forEach((form) => form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const status = form.querySelector('.form-status');
@@ -87,13 +84,13 @@ document.querySelectorAll('[data-lead-form]').forEach((form) => form.addEventLis
       sending: 'भेजा जा रहा है…',
       success: 'धन्यवाद। आपका विवरण सफलतापूर्वक प्राप्त हुआ है। हम शीघ्र आपसे संपर्क करेंगे।',
       emailPending: 'धन्यवाद। आपका विवरण प्राप्त हुआ है। ईमेल की पुष्टि फिलहाल नहीं भेजी जा सकी।',
-      error: 'आपका विवरण अभी सुरक्षित नहीं हो सका। कृपया कुछ देर बाद पुनः प्रयास करें।',
+      error: 'आपका विवरण अभी सुरक्षित नहीं हो सका। कृपया कुछ देर बाद पुनः प्रयास करें या Dattadham1008@gmail.com पर ईमेल करें।',
     }
     : {
       sending: 'Sending…',
       success: 'Thank you. Your details have been received. We will be in touch soon.',
       emailPending: 'Thank you. Your details have been received. We could not send the email confirmation just now.',
-      error: 'We could not save your details. Please try again in a little while.',
+      error: 'We could not save your details. Please try again in a little while, or email Dattadham1008@gmail.com.',
     };
   const payload = Object.fromEntries(new FormData(form));
   payload.source = form.dataset.source;
@@ -101,10 +98,10 @@ document.querySelectorAll('[data-lead-form]').forEach((form) => form.addEventLis
   button.disabled = true;
 
   try {
-    // text/plain avoids a CORS preflight, which Google Apps Script does not answer.
-    const response = await fetch(LEADS_ENDPOINT || '/api/leads', {
+    // Same-origin API; it forwards to the Google Apps Script that writes the sheet.
+    const response = await fetch('/api/leads', {
       method: 'POST',
-      headers: { 'Content-Type': LEADS_ENDPOINT ? 'text/plain;charset=utf-8' : 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
     const result = await response.json().catch(() => ({}));
