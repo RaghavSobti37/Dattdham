@@ -86,12 +86,12 @@ module.exports = async (request, response) => {
     return response.status(400).json({ error: 'Invalid request body' });
   }
 
-  // Hidden field that people never see; bots that fill every field get a quiet success.
-  if (clean(body.company)) return response.status(201).json({ ok: true, saved: true });
-
   const lead = Object.fromEntries(FIELDS.map((field) => [field, clean(body[field])]));
   lead.email = lead.email.toLowerCase();
   lead.source = lead.source || 'Dattadham Website';
+  // Hidden field people never see. Never drop the entry (browser autofill can fill it);
+  // just mark it so it can be reviewed on the admin page.
+  lead.flagged = Boolean(clean(body.dd_hp_field));
 
   if (!lead.name || !/^\S+@\S+\.\S+$/.test(lead.email) || !lead.phone) {
     return response.status(400).json({ error: 'Name, a valid email, and phone are required' });
