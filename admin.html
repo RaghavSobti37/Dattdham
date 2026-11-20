@@ -27,6 +27,8 @@
     td.msg{min-width:240px;white-space:pre-wrap}
     td.nowrap{white-space:nowrap}
     [hidden]{display:none!important}
+    .flag{display:inline-block;margin-left:6px;padding:1px 6px;border:1px solid var(--maroon);color:var(--maroon);font-size:11px;white-space:nowrap}
+    button:disabled{opacity:.6;cursor:wait}
   </style>
 </head>
 <body>
@@ -41,10 +43,10 @@
     <header>
       <h1>Form responses</h1>
       <span class="count" data-count></span>
+      <span class="count" data-updated aria-live="polite"></span>
       <div class="tools">
         <button type="button" data-csv>Download CSV</button>
         <button type="button" class="secondary" data-refresh>Refresh</button>
-        <button type="button" class="secondary" data-logout>Lock</button>
       </div>
     </header>
     <div class="wrap">
@@ -59,25 +61,45 @@
     const view = document.querySelector('[data-view]');
     const error = document.querySelector('[data-error]');
     const rowsEl = document.querySelector('[data-rows]');
+    const refreshButton = document.querySelector('[data-refresh]');
+    const updatedEl = document.querySelector('[data-updated]');
+    const KEY_NAME = 'dattadham-admin-key';
     let key = '';
-    try { key = sessionStorage.getItem('dattadham-admin-key') || ''; } catch {}
+    try { key = localStorage.getItem(KEY_NAME) || ''; } catch {}
 
     const ist = (iso) => new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
     function cell(text, cls) { const td = document.createElement('td'); td.textContent = text ?? ''; if (cls) td.className = cls; return td; }
 
+    // Always fetches every entry fresh from the server (no browser or CDN cache).
     async function load() {
-      const res = await fetch('/api/leads', { headers: { 'x-admin-key': key }, cache: 'no-store' });
-      if (res.status === 401) throw new Error('That key is not right.');
-      if (!res.ok) throw new Error('Could not load responses. Try again.');
-      const data = await res.json();
-      rowsEl.replaceChildren(...data.leads.map((l) => {
-        const tr = document.createElement('tr');
-        tr.append(cell(l.id), cell(ist(l.created_at), 'nowrap'), cell(l.source, 'nowrap'), cell(l.name), cell(l.email), cell(l.phone, 'nowrap'), cell(l.city), cell(l.participation), cell(l.message, 'msg'));
-        return tr;
-      }));
-      document.querySelector('[data-count]').textContent = `${data.count} responses`;
-      login.hidden = true; view.hidden = false;
-      try { sessionStorage.setItem('dattadham-admin-key', key); } catch {}
+      refreshButton.disabled = true;
+      refreshButton.textContent = 'Refreshing…';
+      try {
+        const res = await fetch(`/api/leads?t=${Date.now()}`, { headers: { 'x-admin-key': key }, cache: 'no-store' });
+        if (res.status === 401) throw Object.assign(new Error('That key is not right.'), { unauthorized: true });
+        if (!res.ok) throw new Error('Could not load responses. Try again.');
+        const data = await res.json();
+        rowsEl.replaceChildren(...data.leads.map((l) => {
+          const tr = document.createElement('tr');
+          const nameCell = cell(l.name);
+          if (l.flagged) {
+            const tag = document.createElement('span');
+            tag.className = 'flag';
+            tag.textContent = 'possible spam';
+            tag.title = 'A hidden anti-spam field was filled. Often browser autofill; check before deleting.';
+            nameCell.append(tag);
+          }
+          tr.append(cell(l.id), cell(ist(l.created_at), 'nowrap'), cell(l.source, 'nowrap'), nameCell, cell(l.email), cell(l.phone, 'nowrap'), cell(l.city), cell(l.participation), cell(l.message, 'msg'));
+          return tr;
+        }));
+        document.querySelector('[data-count]').textContent = `${data.count} responses`;
+        updatedEl.textContent = `· updated ${new Date().toLocaleTimeString('en-IN', { timeStyle: 'short' })}`;
+        login.hidden = true; view.hidden = false;
+        try { localStorage.setItem(KEY_NAME, key); } catch {}
+      } finally {
+        refreshButton.disabled = false;
+        refreshButton.textContent = 'Refresh';
+      }
     }
 
     login.addEventListener('submit', async (event) => {
@@ -86,19 +108,21 @@
       error.textContent = '';
       try { await load(); } catch (e) { error.textContent = e.message; }
     });
-    document.querySelector('[data-refresh]').addEventListener('click', () => load().catch((e) => alert(e.message)));
-    document.querySelector('[data-logout]').addEventListener('click', () => {
-      try { sessionStorage.removeItem('dattadham-admin-key'); } catch {}
-      key = ''; rowsEl.replaceChildren(); view.hidden = true; login.hidden = false;
-    });
+    refreshButton.addEventListener('click', () => load().catch((e) => alert(e.message)));
     document.querySelector('[data-csv]').addEventListener('click', async () => {
-      const res = await fetch('/api/leads?format=csv', { headers: { 'x-admin-key': key } });
+      const res = await fetch(`/api/leads?format=csv&t=${Date.now()}`, { headers: { 'x-admin-key': key }, cache: 'no-store' });
       if (!res.ok) return alert('Download failed.');
       const url = URL.createObjectURL(await res.blob());
       const a = Object.assign(document.createElement('a'), { href: url, download: `dattadham-leads-${new Date().toISOString().slice(0, 10)}.csv` });
       document.body.append(a); a.click(); a.remove(); URL.revokeObjectURL(url);
     });
-    if (key) load().catch(() => { key = ''; });
+    // Reloading the page shows the latest responses straight away.
+    if (key) {
+      load().catch((e) => {
+        if (e.unauthorized) { key = ''; try { localStorage.removeItem(KEY_NAME); } catch {} }
+        else { login.hidden = true; view.hidden = false; alert(e.message); }
+      });
+    }
   </script>
 </body>
 </html>
