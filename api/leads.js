@@ -2,7 +2,7 @@
 //   POST /api/leads               save a submission (both site forms post here)
 //   GET  /api/leads?format=csv    export, requires the ADMIN_KEY (x-admin-key header or ?key=)
 const crypto = require('crypto');
-const { db } = require('../lib/db');
+const { saveLead, listLeads } = require('../lib/store');
 
 const FIELDS = ['name', 'email', 'phone', 'city', 'participation', 'message', 'source'];
 const clean = (value) => (typeof value === 'string' ? value.trim().slice(0, 2000) : '');
@@ -51,10 +51,7 @@ async function sendConfirmationEmail({ name, email, participation }) {
 
 async function exportLeads(request, response) {
   if (!isAdmin(request)) return response.status(401).json({ error: 'Unauthorized' });
-  const sql = await db();
-  const rows = await sql`
-    SELECT id, created_at, source, name, email, phone, city, participation, message
-    FROM leads ORDER BY id DESC LIMIT 10000`;
+  const rows = await listLeads();
   if (request.query?.format === 'csv') {
     const header = ['ID', 'Timestamp (IST)', 'Source', 'Name', 'Email', 'Phone', 'City', 'Participation', 'Message'];
     const ist = (d) => new Date(d).toLocaleString('sv-SE', { timeZone: 'Asia/Kolkata' });
@@ -101,18 +98,7 @@ module.exports = async (request, response) => {
   }
 
   try {
-    const sql = await db();
-    // A repeat of the same person within 10 minutes (double tap, retry) is not stored twice.
-    const recent = await sql`
-      SELECT id FROM leads
-      WHERE email = ${lead.email} AND phone = ${lead.phone} AND name = ${lead.name}
-        AND message = ${lead.message} AND created_at > now() - interval '10 minutes'
-      LIMIT 1`;
-    if (!recent.length) {
-      await sql`
-        INSERT INTO leads (source, name, email, phone, city, participation, message)
-        VALUES (${lead.source}, ${lead.name}, ${lead.email}, ${lead.phone}, ${lead.city}, ${lead.participation}, ${lead.message})`;
-    }
+    await saveLead(lead);
   } catch (error) {
     console.error('Lead save failed', error.message);
     return response.status(503).json({ error: 'Could not save your details' });
