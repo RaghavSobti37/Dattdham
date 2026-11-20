@@ -110,6 +110,7 @@ document.querySelectorAll('[data-lead-form]').forEach((form) => form.addEventLis
     }
 
     form.reset();
+    document.dispatchEvent(new CustomEvent('dattadham:lead', { detail: { source: payload.source } }));
     status.textContent = result.emailSent === false ? copy.emailPending : copy.success;
   } catch {
     status.textContent = copy.error;
