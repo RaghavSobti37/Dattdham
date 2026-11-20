@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <title>Form Responses | Dattadham</title>
+  <style>
+    :root{--maroon:#a71922;--ink:#282015;--stone:#675445;--line:#e7c878;--paper:#fffdf5;--sand:#fff7e5}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--sand);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+    header{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:14px 16px;background:var(--paper);border-bottom:1px solid var(--line)}
+    h1{margin:0;color:var(--maroon);font-size:20px}
+    .count{color:var(--stone)}
+    .tools{display:flex;gap:8px;margin-left:auto}
+    button,input{font:inherit}
+    button{min-height:40px;padding:0 14px;border:1px solid var(--maroon);background:var(--maroon);color:#fff;cursor:pointer}
+    button.secondary{background:transparent;color:var(--maroon)}
+    form.login{max-width:360px;margin:12vh auto;padding:24px 16px;display:grid;gap:12px}
+    form.login input{min-height:44px;padding:0 12px;border:1px solid var(--line);background:var(--paper)}
+    .error{color:var(--maroon)}
+    .wrap{overflow-x:auto;padding:16px}
+    table{width:100%;border-collapse:collapse;background:var(--paper)}
+    th,td{padding:8px 10px;border-bottom:1px solid #eadfc4;text-align:left;vertical-align:top}
+    th{position:sticky;top:0;background:#f6ecd2;font-size:13px;white-space:nowrap}
+    td.msg{min-width:240px;white-space:pre-wrap}
+    td.nowrap{white-space:nowrap}
+    [hidden]{display:none!important}
+  </style>
+</head>
+<body>
+  <form class="login" data-login>
+    <h1>Form responses</h1>
+    <label for="key">Admin key</label>
+    <input id="key" type="password" autocomplete="current-password" required>
+    <button type="submit">Open</button>
+    <p class="error" data-error aria-live="polite"></p>
+  </form>
+  <div data-view hidden>
+    <header>
+      <h1>Form responses</h1>
+      <span class="count" data-count></span>
+      <div class="tools">
+        <button type="button" data-csv>Download CSV</button>
+        <button type="button" class="secondary" data-refresh>Refresh</button>
+        <button type="button" class="secondary" data-logout>Lock</button>
+      </div>
+    </header>
+    <div class="wrap">
+      <table>
+        <thead><tr><th>#</th><th>Time (IST)</th><th>Source</th><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Participation</th><th>Message</th></tr></thead>
+        <tbody data-rows></tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    const login = document.querySelector('[data-login]');
+    const view = document.querySelector('[data-view]');
+    const error = document.querySelector('[data-error]');
+    const rowsEl = document.querySelector('[data-rows]');
+    let key = '';
+    try { key = sessionStorage.getItem('dattadham-admin-key') || ''; } catch {}
+
+    const ist = (iso) => new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+    function cell(text, cls) { const td = document.createElement('td'); td.textContent = text ?? ''; if (cls) td.className = cls; return td; }
+
+    async function load() {
+      const res = await fetch('/api/leads', { headers: { 'x-admin-key': key }, cache: 'no-store' });
+      if (res.status === 401) throw new Error('That key is not right.');
+      if (!res.ok) throw new Error('Could not load responses. Try again.');
+      const data = await res.json();
+      rowsEl.replaceChildren(...data.leads.map((l) => {
+        const tr = document.createElement('tr');
+        tr.append(cell(l.id), cell(ist(l.created_at), 'nowrap'), cell(l.source, 'nowrap'), cell(l.name), cell(l.email), cell(l.phone, 'nowrap'), cell(l.city), cell(l.participation), cell(l.message, 'msg'));
+        return tr;
+      }));
+      document.querySelector('[data-count]').textContent = `${data.count} responses`;
+      login.hidden = true; view.hidden = false;
+      try { sessionStorage.setItem('dattadham-admin-key', key); } catch {}
+    }
+
+    login.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      key = document.getElementById('key').value.trim();
+      error.textContent = '';
+      try { await load(); } catch (e) { error.textContent = e.message; }
+    });
+    document.querySelector('[data-refresh]').addEventListener('click', () => load().catch((e) => alert(e.message)));
+    document.querySelector('[data-logout]').addEventListener('click', () => {
+      try { sessionStorage.removeItem('dattadham-admin-key'); } catch {}
+      key = ''; rowsEl.replaceChildren(); view.hidden = true; login.hidden = false;
+    });
+    document.querySelector('[data-csv]').addEventListener('click', async () => {
+      const res = await fetch('/api/leads?format=csv', { headers: { 'x-admin-key': key } });
+      if (!res.ok) return alert('Download failed.');
+      const url = URL.createObjectURL(await res.blob());
+      const a = Object.assign(document.createElement('a'), { href: url, download: `dattadham-leads-${new Date().toISOString().slice(0, 10)}.csv` });
+      document.body.append(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    });
+    if (key) load().catch(() => { key = ''; });
+  </script>
+</body>
+</html>

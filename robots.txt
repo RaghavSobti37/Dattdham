@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
+Disallow: /admin
 Sitemap: https://www.dattadham.in/sitemap.xml

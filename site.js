@@ -110,7 +110,7 @@ document.querySelectorAll('[data-lead-form]').forEach((form) => form.addEventLis
     }
 
     form.reset();
-    status.textContent = result.emailSent ? copy.success : copy.emailPending;
+    status.textContent = result.emailSent === false ? copy.emailPending : copy.success;
   } catch {
     status.textContent = copy.error;
   } finally {
